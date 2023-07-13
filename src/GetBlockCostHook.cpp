@@ -1,6 +1,7 @@
+#include "GetBlockCostHook.h"
+
 #include <SKSE/SKSE.h>
 
-#include "GetBlockCostHook.h"
 #include "PlayerUpdate.h"
 
 using namespace BlockCostHook;
@@ -22,9 +23,10 @@ float GetBlockCostHook::GetBlockCost(RE::HitData& hitData) {
     // Sanity check: should probably always be true if this function is getting called
     if (hitData.flags.any(RE::HitData::Flag::kBlocked)) {
         auto victim = hitData.target.get().get();
-        if (victim && victim->IsPlayerRef()) {
-            const float timeSpentBlocking = PlayerUpdate::OnPlayerUpdate::GetSingleton().playerTimeSpentBlocking;
-            if (timeSpentBlocking > 0.f && timeSpentBlocking < 0.25f) {
+        const auto& singleton = PlayerUpdate::OnPlayerUpdate::GetSingleton();
+        if (victim && victim->IsPlayerRef() && singleton.enableTimedBlocking) {
+            const float timeSpentBlocking = singleton.playerTimeSpentBlocking;
+            if (timeSpentBlocking > 0.f && timeSpentBlocking < singleton.timedBlockingPeriod) {
                 auto aggressor = hitData.aggressor.get().get();
                 if (aggressor && aggressor->HasKeywordString("ActorTypeNPC")) {
                     // Timed block of player against NPC: no Stamina cost

@@ -1,6 +1,7 @@
+#include "OnMeleeHitHook.h"
+
 #include <SKSE/SKSE.h>
 
-#include "OnMeleeHitHook.h"
 #include "PlayerUpdate.h"
 
 using namespace HitHook;
@@ -19,10 +20,11 @@ void OnMeleeHit::InstallHook() {
 }
 
 void OnMeleeHit::ProcessHit(RE::Actor* victim, RE::HitData& hitData) {
-    if (victim && victim->IsPlayerRef()) {
+    const auto& singleton = PlayerUpdate::OnPlayerUpdate::GetSingleton();
+    if (victim && victim->IsPlayerRef() && singleton.enableTimedBlocking) {
         if (hitData.flags.any(RE::HitData::Flag::kBlocked)) {
-            const float timeSpentBlocking = PlayerUpdate::OnPlayerUpdate::GetSingleton().playerTimeSpentBlocking;
-            if (timeSpentBlocking > 0.f && timeSpentBlocking < 0.25f) {
+            const float timeSpentBlocking = singleton.playerTimeSpentBlocking;
+            if (timeSpentBlocking > 0.f && timeSpentBlocking < singleton.timedBlockingPeriod) {
                 auto aggressor = hitData.aggressor.get().get();
                 if (aggressor && aggressor->HasKeywordString("ActorTypeNPC")) {
                     // Timed block against NPC: no damage
@@ -40,20 +42,19 @@ void OnMeleeHit::ProcessHit(RE::Actor* victim, RE::HitData& hitData) {
                     if (isMelee) {
                         if (hitData.flags.any(RE::HitData::Flag::kPowerAttack)) {
                             // Power attack: attacker recoils
-                            SKSE::GetTaskInterface()->AddTask([aggressor]() { 
-                                aggressor->NotifyAnimationGraph("recoilLargeStart");
-                            });
-                            
+                            SKSE::GetTaskInterface()->AddTask(
+                                [aggressor]() { aggressor->NotifyAnimationGraph("recoilLargeStart"); });
+
                         } else {
                             // Not power attack: attacker staggers: thanks Valhalla code
-                            SKSE::GetTaskInterface()->AddTask(
-                                [aggressor, victim]() { 
-                                    auto headingAngle = aggressor->GetHeadingAngle(victim->GetPosition(), false);
-                                    auto direction = (headingAngle >= 0.0f) ? headingAngle / 360.0f : (360.0f + headingAngle) / 360.0f;
-                                    aggressor->SetGraphVariableFloat("staggerDirection", direction);
-                                    aggressor->SetGraphVariableFloat("StaggerMagnitude", 0.3f);
-                                    aggressor->NotifyAnimationGraph("staggerStart");
-                                });
+                            SKSE::GetTaskInterface()->AddTask([aggressor, victim]() {
+                                auto headingAngle = aggressor->GetHeadingAngle(victim->GetPosition(), false);
+                                auto direction =
+                                    (headingAngle >= 0.0f) ? headingAngle / 360.0f : (360.0f + headingAngle) / 360.0f;
+                                aggressor->SetGraphVariableFloat("staggerDirection", direction);
+                                aggressor->SetGraphVariableFloat("StaggerMagnitude", 0.3f);
+                                aggressor->NotifyAnimationGraph("staggerStart");
+                            });
                         }
                     }
                 }

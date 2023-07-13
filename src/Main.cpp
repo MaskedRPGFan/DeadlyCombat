@@ -2,6 +2,7 @@
 #include "GetBlockCostHook.h"
 #include "OnMeleeHitHook.h"
 #include "PlayerUpdate.h"
+#include "RegisterFuncs.hpp"
 
 using namespace SKSE;
 using namespace SKSE::log;
@@ -67,6 +68,8 @@ SKSEPluginLoad(const LoadInterface* skse) {
 
     Init(skse);
     SKSE::GetMessagingInterface()->RegisterListener(MessageHandler);
+
+    SKSE::GetPapyrusInterface()->Register(papyrus::RegisterFunctions);
 
     log::info("{} has finished loading.", plugin->GetName());
     return true;

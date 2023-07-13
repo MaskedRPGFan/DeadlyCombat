@@ -1,6 +1,6 @@
-#include <SKSE/SKSE.h>
-
 #include "PlayerUpdate.h"
+
+#include <SKSE/SKSE.h>
 
 using namespace PlayerUpdate;
 
@@ -23,7 +23,7 @@ void OnPlayerUpdate::Update(RE::PlayerCharacter* player, float delta) {
             Singleton.playerTimeSpentCoolingDown = 0.f;
         } else if (Singleton.playerTimeSpentBlocking > 0.f) {
             Singleton.playerTimeSpentCoolingDown += delta;
-            if (Singleton.playerTimeSpentCoolingDown >= 0.25f) {
+            if (Singleton.playerTimeSpentCoolingDown >= Singleton.cooldownPeriod) {
                 // Finished cooling down
                 Singleton.playerTimeSpentBlocking = 0.f;
             }

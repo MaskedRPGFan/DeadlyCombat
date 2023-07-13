@@ -18,6 +18,14 @@ namespace PlayerUpdate {
         /** Time player cooling down after blocking. */
         float playerTimeSpentCoolingDown = 0.f;
 
+        /** Timed blocking period. */
+        float timedBlockingPeriod = 0.25;
+
+        /** Cooldown period. */
+        float cooldownPeriod = 0.25;
+
+        bool enableTimedBlocking = true;
+
     private:
         OnPlayerUpdate() = default;
         OnPlayerUpdate(const OnPlayerUpdate&) = delete;
